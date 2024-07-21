@@ -8,3 +8,6 @@ __tools__ = [cuteit]
 
 def cli():
     tools_cli(__name__, __tools__)
+
+
+__name__ = "obfuscation"

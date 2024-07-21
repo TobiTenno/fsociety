@@ -9,3 +9,6 @@ __tools__ = [xsstrike, photon]
 
 def cli():
     tools_cli(__name__, __tools__)
+
+
+__name__ = "web_apps"

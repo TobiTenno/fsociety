@@ -14,3 +14,6 @@ __tools__ = [sqlmap, striker, sublist3r, sherlock, s3scanner, gitgraber, hydrare
 
 def cli():
     tools_cli(__name__, __tools__)
+
+
+__name__ = "information_gathering"

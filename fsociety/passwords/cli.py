@@ -12,3 +12,6 @@ __tools__ = [cupp, cr3dov3r, hash_buster, changeme, traitor]
 
 def cli():
     tools_cli(__name__, __tools__)
+
+
+__name__ = "passwords"

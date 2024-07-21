@@ -1,5 +1,4 @@
 import os
-import shutil
 from typing import Iterable
 
 from rich import box
@@ -9,6 +8,7 @@ from rich.text import Text
 
 from fsociety.console import console
 from fsociety.core.config import INSTALL_DIR
+from fsociety.core.errors import doexcept
 
 BACK_COMMANDS = ["back", "return"]
 
@@ -78,6 +78,24 @@ def input_wait():
     input("\nPress [ENTER] to continue... ")
 
 
+def run_tool(tool, selected_tool: str):
+    if hasattr(tool, "install") and not tool.installed():
+        tool.install()
+    try:
+        response = tool.run()
+        if response and response > 0 and response != 256:
+            console.print(
+                f"{selected_tool} returned a non-zero exit code", style="bold red"
+            )
+            if hasattr(tool, "install") and confirm("Do you want to reinstall?"):
+                os.chdir(INSTALL_DIR)
+                tool.uninstall()
+                tool.install()
+        doexcept(Exception(f"{selected_tool} completed"), style="bold green on green")
+    except KeyboardInterrupt:
+        return
+
+
 def tools_cli(name, tools, links=True):
     table = Table(box=box.HEAVY_HEAD)
     table.add_column("Name", style="red", no_wrap=True)
@@ -98,7 +116,7 @@ def tools_cli(name, tools, links=True):
     console.print(table)
     console.print("back", style="command")
     set_readline(list(tools_dict.keys()) + BACK_COMMANDS)
-    selected_tool = input(prompt(name.split(".")[-2])).strip()
+    selected_tool = input(prompt(name.split(".")[-1])).strip()
     if selected_tool not in tools_dict:
         if selected_tool in BACK_COMMANDS:
             return
@@ -107,20 +125,7 @@ def tools_cli(name, tools, links=True):
         console.print("Invalid Command", style="bold yellow")
         return tools_cli(name, tools, links)
     tool = tools_dict.get(selected_tool)
-    if hasattr(tool, "install") and not tool.installed():
-        tool.install()
-    try:
-        response = tool.run()
-        if response and response > 0 and response != 256:
-            console.print(
-                f"{selected_tool} returned a non-zero exit code", style="bold red"
-            )
-            if hasattr(tool, "install") and confirm("Do you want to reinstall?"):
-                os.chdir(INSTALL_DIR)
-                shutil.rmtree(tool.full_path)
-                tool.install()
-    except KeyboardInterrupt:
-        return
+    run_tool(tool, selected_tool)
 
     return input_wait()
 

@@ -103,3 +103,6 @@ __tools__ = [
 
 def cli():
     tools_cli(__name__, __tools__, links=False)
+
+
+__name__ = "utilities"

@@ -122,6 +122,41 @@ class GitHubRepo(metaclass=ABCMeta):
             raise CloneError(f"{self.full_path} not found")
         return self.full_path
 
+    def uninstallable(self) -> bool:
+        if self.install_options:
+            install = self.install_options
+            target_os = config.get("fsociety", "os")
+            command = "exit 1"
+            if isinstance(install, dict):
+                if target_os == "macos" and "brew" in install and which("brew"):
+                    return True
+                elif target_os == "windows" and "winget" in install and which("winget"):
+                    return True
+                elif target_os == "windows" and "scoop" in install and which("scoop"):
+                    return True
+            os.system(command)
+        return False
+
+    def uninstall(self) -> None:
+        if self.install_options:
+            install = self.install_options
+            target_os = config.get("fsociety", "os")
+            command = "exit 1"
+            if isinstance(install, dict):
+                if target_os == "macos" and "brew" in install and which("brew"):
+                    brew_opts = install.get("brew")
+                    command = f"brew {brew_opts}"
+                elif target_os == "windows" and "winget" in install and which("winget"):
+                    winget_opts = install.get("winget")
+                    command = f"winget install {winget_opts}"
+                elif target_os == "windows" and "scoop" in install and which("scoop"):
+                    scoop_opts = install.get("scoop")
+                    command = f"scoop {scoop_opts}"
+            if command == "exit 1":
+                rmtree(self.full_path)
+            else:
+                os.system(command)
+
     def install(self, no_confirm: bool = False, clone: bool = True) -> None:
         if no_confirm or not confirm(
             f"\nDo you want to install https://github.com/{self.path}?"
@@ -176,6 +211,12 @@ class GitHubRepo(metaclass=ABCMeta):
                 elif "brew" in install and which("brew"):
                     brew_opts = install.get("brew")
                     command = f"brew {brew_opts}"
+                elif target_os == "windows" and "winget" in install and which("winget"):
+                    winget_opts = install.get("winget")
+                    command = f"winget install {winget_opts}"
+                elif target_os == "windows" and "scoop" in install and which("scoop"):
+                    scoop_opts = install.get("scoop")
+                    command = f"scoop {scoop_opts}"
                 elif target_os in install and target_os in self.scriptable_os:
                     command = str(install[target_os])
                 else:
